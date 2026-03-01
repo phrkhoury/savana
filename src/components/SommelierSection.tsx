@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Send, Loader2, RefreshCw } from 'lucide-react';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
 
 export const SommelierSection: React.FC = () => {
   const [step, setStep] = useState(0);
@@ -16,8 +14,18 @@ export const SommelierSection: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleRecommendation = async () => {
+    // Pega a chave do ambiente de forma segura
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    // Se não houver chave, mostra mensagem em vez de travar o site
+    if (!apiKey) {
+      setRecommendation("O Sommelier Virtual está em manutenção técnica (Chave de API não configurada). Por favor, entre em contato conosco diretamente para recomendações personalizadas.");
+      return;
+    }
+
     setLoading(true);
     try {
+      const ai = new GoogleGenAI({ apiKey });
       const prompt = `Você é um Sommelier de Cachaça Premium da Savana Cachaças. 
       Com base nestas preferências do cliente:
       - Intensidade: ${preferences.intensity}
@@ -50,7 +58,6 @@ export const SommelierSection: React.FC = () => {
 
   return (
     <section id="sommelier" className="py-24 bg-savana-green text-white overflow-hidden relative">
-      {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-savana-gold blur-[120px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-savana-gold blur-[120px]"></div>
