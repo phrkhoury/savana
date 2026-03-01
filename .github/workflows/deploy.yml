@@ -1,29 +1,20 @@
-# Workflow para construir e publicar o site no GitHub Pages com a IA ativa
 name: Deploy static content to Pages
-
 on:
-  # Roda toda vez que você salvar (Push) na branch principal
   push:
     branches: ["main"]
-
-  # Permite rodar manualmente se precisar
   workflow_dispatch:
 
-# Permissões necessárias para o GitHub publicar o site
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Garante que apenas um deploy aconteça por vez
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,20 +29,23 @@ jobs:
         run: npm install
 
       - name: Build
-        # Aqui é onde a mágica acontece: pegamos a chave secreta e entregamos ao site
         run: npm run build
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Pasta onde o site pronto fica guardado
           path: './dist'
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Deploy to G
