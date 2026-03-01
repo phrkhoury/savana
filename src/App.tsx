@@ -6,6 +6,7 @@ import {
   Truck, 
   Award, 
   ChevronRight, 
+  ChevronLeft,
   Instagram, 
   Facebook, 
   Menu, 
@@ -17,10 +18,16 @@ import { PRODUCTS } from './types';
 import { ProductCard } from './components/ProductCard';
 import { SommelierSection } from './components/SommelierSection';
 import { PriceTable } from './components/PriceTable';
+import { ProductModal } from './components/ProductModal';
+import { Product } from './types';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const itemsPerPage = 12;
+
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
@@ -29,6 +36,17 @@ export default function App() {
     product.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
     product.category.toLowerCase().includes(catalogSearch.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredCatalog.length / itemsPerPage);
+  const paginatedCatalog = filteredCatalog.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [catalogSearch]);
 
   const testimonials = [
     {
@@ -222,19 +240,22 @@ export default function App() {
                 Compromisso com a Arte.
               </h2>
               <p className="text-savana-earth/80 text-lg leading-relaxed">
-                Na Savana Cachaças, não apenas distribuímos bebidas; celebramos a rica herança cultural do Brasil. Nossa curadoria é fruto de anos de pesquisa e parcerias com alambiques selecionados que mantêm viva a tradição artesanal.
+                Fundada em 1991, a Distribuidora Savana vem desenvolvendo um importante papel na divulgação e valorização da cachaça. Trabalhamos com aproximadamente 900 marcas e 2000 rótulos, em diversos tipos de apresentações: miniaturas, porcelana, vidro, empalhadas e embalagens especiais. Também trabalhamos com licores, tonéis, dornas, copos, canecas, porta cachaça e livros especializados no ramo.
               </p>
               <p className="text-savana-earth/80 text-lg leading-relaxed">
-                Cada rótulo em nosso catálogo passa por um rigoroso processo de avaliação sensorial, garantindo que apenas a excelência chegue até você. Somos o elo entre o produtor apaixonado e o apreciador exigente.
+                Distribuímos as melhores cachaças do Brasil, incluindo as famosas Havana e Anísio Santiago, fabricadas em Salinas/MG. Fazemos caixas mistas e entregamos em todo o país com ótimos preços e logística, já que temos parceria com as principais transportadoras.
+              </p>
+              <p className="text-savana-gold font-bold text-xl tracking-widest uppercase">
+                Consulte nossos preços! Será um prazer tê-lo como cliente!
               </p>
               <div className="grid grid-cols-2 gap-8 pt-8">
                 <div>
-                  <p className="text-4xl font-serif text-savana-gold mb-2">15+</p>
-                  <p className="text-xs uppercase tracking-widest font-bold text-savana-green">Alambiques Parceiros</p>
+                  <p className="text-4xl font-serif text-savana-gold mb-2">900+</p>
+                  <p className="text-xs uppercase tracking-widest font-bold text-savana-green">Marcas Parceiras</p>
                 </div>
                 <div>
-                  <p className="text-4xl font-serif text-savana-gold mb-2">100%</p>
-                  <p className="text-xs uppercase tracking-widest font-bold text-savana-green">Artesanal Premium</p>
+                  <p className="text-4xl font-serif text-savana-gold mb-2">2000+</p>
+                  <p className="text-xs uppercase tracking-widest font-bold text-savana-green">Rótulos Exclusivos</p>
                 </div>
               </div>
             </motion.div>
@@ -265,8 +286,12 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredCatalog.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {paginatedCatalog.map((product) => (
+              <ProductCard 
+                key={product.id} 
+                product={product} 
+                onViewDetails={(p) => setSelectedProduct(p)}
+              />
             ))}
           </div>
 
@@ -276,11 +301,42 @@ export default function App() {
             </div>
           )}
 
-          <div className="mt-16 text-center">
-            <button className="px-12 py-4 border-2 border-savana-green text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-savana-green hover:text-white transition-all">
-              Ver Catálogo Completo
-            </button>
-          </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-16 flex items-center justify-center gap-4">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-3 rounded-full border border-savana-green/20 text-savana-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-savana-cream transition-all"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-10 h-10 rounded-full text-xs font-bold transition-all ${
+                      currentPage === page 
+                        ? 'bg-savana-green text-white' 
+                        : 'text-savana-green hover:bg-savana-cream'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-3 rounded-full border border-savana-green/20 text-savana-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-savana-cream transition-all"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -363,11 +419,19 @@ export default function App() {
           <p className="text-white/70 text-xl max-w-2xl mx-auto mb-12">
             Seja para sua coleção pessoal ou para o seu estabelecimento, a Savana é sua parceira na busca pela excelência.
           </p>
-          <button className="px-12 py-5 bg-savana-gold text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-white transition-all">
+          <a 
+            href="#catalogo" 
+            className="inline-block px-12 py-5 bg-savana-gold text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-white transition-all"
+          >
             Explorar Catálogo Completo
-          </button>
+          </a>
         </div>
       </section>
+
+      <ProductModal 
+        product={selectedProduct} 
+        onClose={() => setSelectedProduct(null)} 
+      />
 
       {/* Footer */}
       <footer id="contato" className="py-16 bg-savana-black text-white/50 border-t border-white/5">

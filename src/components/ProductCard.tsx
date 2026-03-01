@@ -4,9 +4,10 @@ import { Product } from '../types';
 
 interface ProductCardProps {
   product: Product;
+  onViewDetails: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -36,7 +37,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <p className="text-[11px] uppercase tracking-wider text-savana-gold font-bold mb-1">Perfil Sensorial</p>
           <p className="text-xs italic text-savana-earth/60">{product.sensoryProfile}</p>
         </div>
-        <button className="w-full py-3 mt-4 border border-savana-green text-savana-green hover:bg-savana-green hover:text-white transition-all duration-300 rounded-lg text-sm font-semibold uppercase tracking-widest">
+        <button 
+          onClick={() => onViewDetails(product)}
+          className="w-full py-3 mt-4 border border-savana-green text-savana-green hover:bg-savana-green hover:text-white transition-all duration-300 rounded-lg text-sm font-semibold uppercase tracking-widest"
+        >
           Ver Detalhes
         </button>
       </div>
