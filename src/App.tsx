@@ -10,7 +10,8 @@ import {
   Facebook, 
   Menu, 
   X,
-  Quote
+  Quote,
+  Search
 } from 'lucide-react';
 import { PRODUCTS } from './types';
 import { ProductCard } from './components/ProductCard';
@@ -19,9 +20,15 @@ import { PriceTable } from './components/PriceTable';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.1], [1, 0.95]);
+
+  const filteredCatalog = PRODUCTS.filter(product => 
+    product.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+    product.category.toLowerCase().includes(catalogSearch.toLowerCase())
+  );
 
   const testimonials = [
     {
@@ -55,13 +62,20 @@ export default function App() {
           </div>
 
           <div className="hidden md:flex items-center gap-10">
-            {['Início', 'Sobre', 'Catálogo', 'Preços', 'Sommelier', 'Contato'].map((item) => (
+            {[
+              { label: 'Início', id: 'inicio' },
+              { label: 'Sobre', id: 'sobre' },
+              { label: 'Catálogo', id: 'catalogo' },
+              { label: 'Preços', id: 'precos' },
+              { label: 'Sommelier', id: 'sommelier' },
+              { label: 'Contato', id: 'contato' }
+            ].map((item) => (
               <a 
-                key={item} 
-                href={`#${item.toLowerCase()}`} 
+                key={item.id} 
+                href={`#${item.id}`} 
                 className="text-xs uppercase tracking-[0.2em] font-semibold text-savana-green/70 hover:text-savana-gold transition-colors"
               >
-                {item}
+                {item.label}
               </a>
             ))}
           </div>
@@ -84,14 +98,21 @@ export default function App() {
           className="fixed inset-0 z-40 bg-savana-cream pt-24 px-6 md:hidden"
         >
           <div className="flex flex-col gap-8 text-center">
-            {['Início', 'Sobre', 'Catálogo', 'Preços', 'Sommelier', 'Contato'].map((item) => (
+            {[
+              { label: 'Início', id: 'inicio' },
+              { label: 'Sobre', id: 'sobre' },
+              { label: 'Catálogo', id: 'catalogo' },
+              { label: 'Preços', id: 'precos' },
+              { label: 'Sommelier', id: 'sommelier' },
+              { label: 'Contato', id: 'contato' }
+            ].map((item) => (
               <a 
-                key={item} 
-                href={`#${item.toLowerCase()}`} 
+                key={item.id} 
+                href={`#${item.id}`} 
                 className="text-xl font-serif text-savana-green"
                 onClick={() => setIsMenuOpen(false)}
               >
-                {item}
+                {item.label}
               </a>
             ))}
             <button className="w-full py-4 bg-savana-green text-white rounded-xl font-bold uppercase tracking-widest">
@@ -102,7 +123,7 @@ export default function App() {
       )}
 
       {/* Hero Section */}
-      <section id="início" className="relative h-screen flex items-center justify-center overflow-hidden bg-savana-black">
+      <section id="inicio" className="relative h-screen flex items-center justify-center overflow-hidden bg-savana-black">
         <div className="absolute inset-0 opacity-60">
           <img 
             src="https://picsum.photos/seed/savana-hero-bg/1920/1080" 
@@ -149,7 +170,7 @@ export default function App() {
             transition={{ delay: 0.8 }}
             className="flex flex-col md:flex-row items-center justify-center gap-6"
           >
-            <a href="#catálogo" className="px-10 py-4 bg-savana-gold text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-white transition-all flex items-center gap-2 group">
+            <a href="#catalogo" className="px-10 py-4 bg-savana-gold text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-white transition-all flex items-center gap-2 group">
               Conheça Nosso Catálogo
               <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </a>
@@ -222,21 +243,38 @@ export default function App() {
       </section>
 
       {/* Product Catalog */}
-      <section id="catálogo" className="py-24 bg-white">
+      <section id="catalogo" className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <span className="text-savana-gold font-bold uppercase tracking-widest text-sm mb-4 inline-block">Seleção Exclusiva</span>
             <h2 className="text-4xl md:text-5xl text-savana-green mb-6">Nosso Catálogo Premium</h2>
-            <p className="text-savana-earth/70 text-lg">
+            <p className="text-savana-earth/70 text-lg mb-12">
               Explore nossa coleção de cachaças premiadas, desde as brancas mais puras até as envelhecidas em madeiras nobres.
             </p>
+
+            {/* Catalog Search Filter */}
+            <div className="relative max-w-md mx-auto">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-savana-earth/40" size={20} />
+              <input
+                type="text"
+                placeholder="Filtrar catálogo..."
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-black/10 bg-savana-cream/20 focus:outline-none focus:ring-2 focus:ring-savana-gold/30 transition-all"
+                onChange={(e) => setCatalogSearch(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {PRODUCTS.map((product) => (
+            {filteredCatalog.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+
+          {filteredCatalog.length === 0 && (
+            <div className="text-center py-12 text-savana-earth/40 italic">
+              Nenhum produto encontrado para sua busca.
+            </div>
+          )}
 
           <div className="mt-16 text-center">
             <button className="px-12 py-4 border-2 border-savana-green text-savana-green font-bold uppercase tracking-widest rounded-full hover:bg-savana-green hover:text-white transition-all">

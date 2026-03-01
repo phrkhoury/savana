@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PriceItem {
   name: string;
@@ -46,12 +46,17 @@ const PRICE_DATA: PriceItem[] = [
 
 export const PriceTable: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showTable, setShowTable] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: keyof PriceItem; direction: 'asc' | 'desc' } | null>(null);
 
-  const sortedData = useMemo(() => {
-    let items = [...PRICE_DATA].filter(item => 
+  const filteredData = useMemo(() => {
+    return PRICE_DATA.filter(item => 
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
+  }, [searchTerm]);
+
+  const sortedData = useMemo(() => {
+    let items = [...filteredData];
     if (sortConfig !== null) {
       items.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -64,7 +69,7 @@ export const PriceTable: React.FC = () => {
       });
     }
     return items;
-  }, [searchTerm, sortConfig]);
+  }, [filteredData, sortConfig]);
 
   const requestSort = (key: keyof PriceItem) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -74,92 +79,116 @@ export const PriceTable: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
+  const isSearching = searchTerm.length > 0;
+  const shouldShowTable = showTable || isSearching;
+
   return (
-    <section id="preços" className="py-24 bg-white">
+    <section id="precos" className="py-24 bg-white">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-savana-gold font-bold uppercase tracking-widest text-sm mb-4 inline-block">Transparência</span>
           <h2 className="text-4xl md:text-5xl text-savana-green mb-6">Tabela de Preços</h2>
           <p className="text-savana-earth/70 text-lg">
-            Confira nossa tabela completa de preços no atacado. Valores atualizados para garantir a melhor negociação.
+            Consulte os valores de nossos rótulos exclusivos. Digite o nome da cachaça para ver o preço instantaneamente.
           </p>
         </div>
 
         <div className="max-w-5xl mx-auto">
-          <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:w-96">
+          <div className="mb-12 flex flex-col md:flex-row gap-6 items-center justify-center">
+            <div className="relative w-full md:w-[500px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-savana-earth/40" size={20} />
               <input
                 type="text"
-                placeholder="Buscar cachaça..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-black/5 bg-savana-cream/30 focus:outline-none focus:ring-2 focus:ring-savana-gold/20 transition-all"
+                placeholder="Qual cachaça você procura?"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl border border-black/10 bg-savana-cream/20 focus:outline-none focus:ring-2 focus:ring-savana-gold/30 transition-all text-lg"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="text-xs text-savana-earth/50 font-bold uppercase tracking-widest">
-              {sortedData.length} itens encontrados
-            </div>
+            
+            <button 
+              onClick={() => setShowTable(!showTable)}
+              className="px-8 py-4 bg-savana-green text-white rounded-2xl font-bold uppercase tracking-widest hover:bg-savana-gold transition-all flex items-center gap-2 whitespace-nowrap"
+            >
+              {showTable ? 'Ocultar Tabela' : 'Ver Tabela Completa'}
+            </button>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-black/5 shadow-sm">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-savana-green text-white">
-                  <th 
-                    className="px-6 py-4 cursor-pointer hover:bg-savana-green/90 transition-colors"
-                    onClick={() => requestSort('name')}
-                  >
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold">
-                      Produto
-                      {sortConfig?.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-                    </div>
-                  </th>
-                  <th className="px-6 py-4">
-                    <div className="text-xs uppercase tracking-widest font-bold">Volume</div>
-                  </th>
-                  <th 
-                    className="px-6 py-4 cursor-pointer hover:bg-savana-green/90 transition-colors text-right"
-                    onClick={() => requestSort('price')}
-                  >
-                    <div className="flex items-center justify-end gap-2 text-xs uppercase tracking-widest font-bold">
-                      Preço (R$)
-                      {sortConfig?.key === 'price' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-black/5">
-                {sortedData.map((item, index) => (
-                  <motion.tr 
-                    key={index}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.02 }}
-                    className="hover:bg-savana-cream/50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-serif text-savana-green">{item.name}</td>
-                    <td className="px-6 py-4 text-sm text-savana-earth/60">{item.volume}</td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-savana-gold">
-                      {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                  </motion.tr>
-                ))}
-                {sortedData.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-12 text-center text-savana-earth/40 italic">
-                      Nenhum resultado encontrado para "{searchTerm}"
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <AnimatePresence>
+            {shouldShowTable && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-8"
+              >
+                <div className="flex justify-between items-center px-2">
+                  <div className="text-xs text-savana-earth/50 font-bold uppercase tracking-widest">
+                    {sortedData.length} itens encontrados
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto rounded-3xl border border-black/5 shadow-xl bg-white">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-savana-green text-white">
+                        <th 
+                          className="px-8 py-5 cursor-pointer hover:bg-savana-green/90 transition-colors"
+                          onClick={() => requestSort('name')}
+                        >
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold">
+                            Produto
+                            {sortConfig?.key === 'name' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                          </div>
+                        </th>
+                        <th className="px-8 py-5">
+                          <div className="text-xs uppercase tracking-widest font-bold">Volume</div>
+                        </th>
+                        <th 
+                          className="px-8 py-5 cursor-pointer hover:bg-savana-green/90 transition-colors text-right"
+                          onClick={() => requestSort('price')}
+                        >
+                          <div className="flex items-center justify-end gap-2 text-xs uppercase tracking-widest font-bold">
+                            Preço (R$)
+                            {sortConfig?.key === 'price' && (sortConfig.direction === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5">
+                      {sortedData.map((item, index) => (
+                        <motion.tr 
+                          key={index}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: index * 0.01 }}
+                          className="hover:bg-savana-cream/30 transition-colors group"
+                        >
+                          <td className="px-8 py-5 font-serif text-savana-green text-lg">{item.name}</td>
+                          <td className="px-8 py-5 text-sm text-savana-earth/60">{item.volume}</td>
+                          <td className="px-8 py-5 text-right font-mono font-bold text-savana-gold text-lg">
+                            {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                        </motion.tr>
+                      ))}
+                      {sortedData.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-8 py-20 text-center text-savana-earth/40 italic text-lg">
+                            Nenhum resultado encontrado para "{searchTerm}"
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
-          <div className="mt-8 p-6 bg-savana-cream/50 rounded-2xl border border-dashed border-savana-gold/30">
-            <p className="text-xs text-savana-earth/60 leading-relaxed text-center">
-              * Valores sujeitos a alteração sem aviso prévio. Tabela válida para pedidos no atacado. 
-              Para condições especiais de faturamento e frete, consulte nosso atendimento comercial.
+          <div className="mt-12 p-8 bg-savana-cream/30 rounded-3xl border border-dashed border-savana-gold/20">
+            <p className="text-sm text-savana-earth/60 leading-relaxed text-center italic">
+              * Valores para pedidos no atacado. Sujeitos a alteração sem aviso prévio. 
+              Para orçamentos personalizados, entre em contato com nossa equipe comercial.
             </p>
           </div>
         </div>
