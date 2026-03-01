@@ -46,6 +46,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Deploy to G
+        uses: actions/configure-pa
